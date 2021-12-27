@@ -9,7 +9,9 @@
 
 ## 技术栈
 
-## 使用 Vite 初始化项目雏形
+## 架构搭建
+
+### 使用 Vite 初始化项目雏形
 
 在 CMD 中输入以下命令
 
@@ -34,6 +36,8 @@ npm init @vitejs/app
    ```bash
    npm run dev
    ```
+
+### 修改 Vite 配置文件
 
 Vite 配置文件 `vite.config.ts` 位于根目录下，项目启动时会自动读取。
 
@@ -201,6 +205,83 @@ export default defineConfig({
 
 这样，我们在执行 `eslint --fix` 命令时，ESLint 就会按照 Prettier 的配置规则来格式化代码，轻松解决二者冲突问题。
 
-## 提交规范
+### 集成 husky 和 lint-staged
+
+我们在项目中已集成 ESLint 和 Prettier，在编码时，这些工具可以对我们写的代码进行实时校验，在一定程度上能有效规范我们写的代码，但团队可能会有些人觉得这些条条框框的限制很麻烦，选择视“提示”而不见，依旧按自己的一套风格来写代码，或者干脆禁用掉这些工具，开发完成就直接把代码提交到了仓库，日积月累，ESLint 也就形同虚设。
+
+所以，我们还需要做一些限制，让没通过 ESLint 检测和修复的代码禁止提交，从而保证仓库代码都是符合规范的。
+
+为了解决这个问题，我们需要用到 Git Hook，在本地执行 `git commit` 的时候，就对所提交的代码进行 ESLint 检测和修复（即执行 `eslint --fix`），如果这些代码没通过 ESLint 规则校验，则禁止提交。
+
+实现这一功能，我们借助 [husk](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Ftypicode%2Fhusky) + [lint-staged](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fokonet%2Flint-staged) 。
+
+> [husky](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Ftypicode%2Fhusky) —— Git Hook 工具，可以设置在 git 各个阶段（`pre-commit`、`commit-msg`、`pre-push` 等）触发我们的命令。
+> [lint-staged](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fokonet%2Flint-staged) —— 在 git 暂存的文件上运行 linters。
 
  
+
+### 配置 husky
+
+- 自动配置（推荐）
+
+  使用 `husky-init` 命令快速在项目初始化一个 husky 配置。
+
+  ```bash
+  npx husky-init && npm install
+  ```
+
+  这行命令做了四件事：
+
+  1. 安装 husky 到开发依赖
+  2. 在项目根目录下创建 `.husky` 目录
+  3. 在 `.husky` 目录创建 `pre-commit` hook，并初始化 `pre-commit` 命令为 `npm test`
+  4. 修改 `package.json` 的 `scripts`，增加 `"prepare": "husky install"`
+
+> **特别注意：本项目使用 husky 6.x 版本，6.x 版本配置方式跟之前的版本有较大差异。目前网上大部分有关 husky 的教程都是 6 以前的版本 ，跟本文教程不太一样，当发现配置方法不一致时，一切以 [husky 官网](https://link.juejin.cn/?target=https%3A%2F%2Ftypicode.github.io%2Fhusky%2F%23%2F%3Fid%3Dusage)为准。**
+
+到这里，husky 配置完毕，现在我们来使用它：
+
+husky 包含很多 `hook`（钩子），常用有：`pre-commit`、`commit-msg`、`pre-push`。这里，我们使用 `pre-commit` 来触发 ESLint 命令。
+
+修改 `.husky/pre-commit` hook 文件的触发命令：
+
+```bash
+eslint --fix ./src --ext .vue,.js,.ts
+```
+
+上面这个 `pre-commit` hook 文件的作用是：当我们执行 `git commit -m "xxx"` 时，会先对 `src` 目录下所有的 `.vue`、`.js`、`.ts ` 文件执行 `eslint --fix` 命令，如果 ESLint 通过，成功 `commit`，否则终止 `commit`。
+
+但是又存在一个问题：有时候我们明明只改动了一两个文件，却要对所有的文件执行 `eslint --fix`。假如这是一个历史项目，我们在中途配置了 ESLint 规则，那么在提交代码时，也会对其他未修改的“历史”文件都进行检查，可能会造成大量文件出现 ESLint 错误，显然不是我们想要的结果。
+
+我们要做到只用 ESLint 修复自己此次写的代码，而不去影响其他的代码。所以我们还需借助一个神奇的工具 **lint-staged** 。
+
+### 配置 lint-staged
+
+lint-staged 这个工具一般结合 husky 来使用，它可以让 husky 的 `hook` 触发的命令只作用于 `git add`那些文件（即 git 暂存区的文件），而不会影响到其他文件。
+
+接下来，我们使用 lint-staged 继续优化项目。
+
+1. 安装 lint-staged
+
+   ```bash
+   npm i lint-staged -D
+   ```
+
+2. 在 `package.json`里增加 lint-staged 配置项
+
+   ```json
+   "lint-staged": {
+     "*.{vue,js,ts}": "eslint --fix"
+   },
+   ```
+
+   这行命令表示：只对 git 暂存区的 `.vue`、`.js`、`.ts` 文件执行 `eslint --fix`。
+
+3. 修改 `.husky/pre-commit` hook 的触发命令为：`npx lint-staged`
+
+至此，husky 和 lint-staged 组合配置完成。
+
+现在我们提交代码时就会变成这样：
+
+假如我们修改了 `scr` 目录下的 `test-1.js`、`test-2.ts` 和 `test-3.md` 文件，然后 `git add ./src/`，最后 `git commit -m "test..."`，这时候就会只对 `test-1.js`、`test-2.ts` 这两个文件执行 `eslint --fix`。如果 ESLint 通过，成功提交，否则终止提交。从而保证了我们提交到 Git 仓库的代码都是规范的。
+
