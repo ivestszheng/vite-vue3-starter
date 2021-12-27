@@ -7,8 +7,6 @@
 5. Vue Language Features(Volar): VSCode 插件
 6. Vue 3 Snippets: VSCode 插件
 
-## 技术栈
-
 ## 架构搭建
 
 ### 使用 Vite 初始化项目雏形
@@ -74,7 +72,6 @@ export default defineConfig({
     // }
   }
 })
-
 ```
 
 ## 约束代码风格
@@ -87,45 +84,44 @@ export default defineConfig({
    npm i prettier -D
    ```
 
-   1. 创建 Prettier 配置文件
+2. 创建 Prettier 配置文件
 
-      Prettier 支持多种格式的[配置文件](https://link.juejin.cn?target=https%3A%2F%2Fprettier.io%2Fdocs%2Fen%2Fconfiguration.html)，比如 `.json`、`.yml`、`.yaml`、`.js`等。
+   Prettier 支持多种格式的[配置文件](https://link.juejin.cn?target=https%3A%2F%2Fprettier.io%2Fdocs%2Fen%2Fconfiguration.html)，比如 `.json`、`.yml`、`.yaml`、`.js`等。
 
-      在本项目根目录下创建 `.prettierrc` 文件。
+   在本项目根目录下创建 `.prettierrc` 文件。
 
-   2. 配置 `.prettierrc`
+3. 配置 `.prettierrc`
 
-      在本项目中，我们进行如下简单配置，关于更多配置项信息，请前往官网查看 [Prettier-Options](https://link.juejin.cn?target=https%3A%2F%2Fprettier.io%2Fdocs%2Fen%2Foptions.html) 。
+   在本项目中，我们进行如下简单配置，关于更多配置项信息，请前往官网查看 [Prettier-Options](https://link.juejin.cn?target=https%3A%2F%2Fprettier.io%2Fdocs%2Fen%2Foptions.html) 。
 
-      ```json
-      {
-        "useTabs": false,
-        "tabWidth": 2,
-        "printWidth": 100,
-        "singleQuote": true,
-        "trailingComma": "none",
-        "bracketSpacing": true,
-        "semi": false
-      }
-      ```
+   ```json
+   {
+     "useTabs": false,
+     "tabWidth": 2,
+     "printWidth": 100,
+     "singleQuote": true,
+     "trailingComma": "none",
+     "bracketSpacing": true,
+     "semi": false
+   }
+   ```
 
-   3. Prettier 安装且配置好之后，就能使用命令来格式化代码
+4. Prettier 安装且配置好之后，就能使用命令来格式化代码
 
-      ```bash
-      # 格式化所有文件（. 表示所有文件）
-      npx prettier --write .
-      ```
+   ```bash
+   # 格式化所有文件（. 表示所有文件）
+   npx prettier --write .
+   ```
 
    注意：
 
    VSCode 编辑器使用 Prettier 配置需要下载插件 **Prettier - Code formatter** 。
 
-
    Prettier 配置好以后，在使用 VSCode 等编辑器的格式化功能时，编辑器就会按照 Prettier 配置文件的规则来进行格式化，避免了因为大家编辑器配置不一样而导致格式化后的代码风格不统一的问题。
 
 ### 集成 ESLint 配置
 
-1. 安装 ESLint 
+1. 安装 ESLint
 
    推荐在本地安装。
 
@@ -141,7 +137,7 @@ export default defineConfig({
 
    ```bash
    npm i @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-config-airbnb-base eslint-plugin-import eslint-plugin-vue -D
-   
+
    ```
 
 3. ESLint 配置文件 `.eslintrc.js`
@@ -156,7 +152,6 @@ export default defineConfig({
      plugins: ['vue', '@typescript-eslint'],
      rules: {}
    }
-   
    ```
 
    虽然，现在编辑器已经给出错误提示和修复方案，但需要我们一个一个去点击修复，还是挺麻烦的。很简单，我们只需设置编辑器保存文件时自动执行 `eslint --fix` 命令进行代码风格修复。
@@ -200,7 +195,7 @@ export default defineConfig({
     ],
     ...
   }
-  
+
   ```
 
 这样，我们在执行 `eslint --fix` 命令时，ESLint 就会按照 Prettier 的配置规则来格式化代码，轻松解决二者冲突问题。
@@ -217,8 +212,6 @@ export default defineConfig({
 
 > [husky](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Ftypicode%2Fhusky) —— Git Hook 工具，可以设置在 git 各个阶段（`pre-commit`、`commit-msg`、`pre-push` 等）触发我们的命令。
 > [lint-staged](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fokonet%2Flint-staged) —— 在 git 暂存的文件上运行 linters。
-
- 
 
 ### 配置 husky
 
@@ -284,4 +277,3 @@ lint-staged 这个工具一般结合 husky 来使用，它可以让 husky 的 `h
 现在我们提交代码时就会变成这样：
 
 假如我们修改了 `scr` 目录下的 `test-1.js`、`test-2.ts` 和 `test-3.md` 文件，然后 `git add ./src/`，最后 `git commit -m "test..."`，这时候就会只对 `test-1.js`、`test-2.ts` 这两个文件执行 `eslint --fix`。如果 ESLint 通过，成功提交，否则终止提交。从而保证了我们提交到 Git 仓库的代码都是规范的。
-
